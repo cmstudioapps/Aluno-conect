@@ -1,0 +1,65 @@
+body {
+            font-family: 'Schoolbell', sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            padding: 15px;
+            color: white;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px;
+            font-size: 20px;
+            border-radius: 50%;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        #btn-salvar-pdf, #btn-interromper-chamada {
+            bottom: 90px;
+        }
+
+        #area-chamada {
+            padding: 20px;
+            margin: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #area-chamada ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #area-chamada li {
+            padding: 10px;
+            background-color: #e9ecef;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+
+        #area-chamada li a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+
+        #area-chamada li a:hover {
+            text-decoration: underline;
+        }

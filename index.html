@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conect Aluno</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Conect Aluno - Registro de Chamada</h1>
+    </header>
+
+    <main>
+        <div id="area-chamada">
+            <p>Nenhuma chamada criada ainda.</p>
+        </div>
+
+        <!-- Botão para baixar PDF -->
+        <button id="btn-baixar-pdf" style="display: none;">Baixar Lista em PDF</button>
+    </main>
+
+    <button id="btn-criar-chamada" class="floating-btn">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
+            authDomain: "escola-97256.firebaseapp.com",
+            databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",
+            projectId: "escola-97256",
+            storageBucket: "escola-97256.appspot.com",
+            messagingSenderId: "765009682973",
+            appId: "1:765009682973:web:d245f17dcdde0a28959cf4"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        document.getElementById("btn-criar-chamada").addEventListener("click", function() {
+            const professor = prompt("Digite seu nome:");
+            if (professor) {
+                const codigo = Math.floor(100 + Math.random() * 900);
+                const identificador = `${professor}-${codigo}`;
+
+                db.ref(`chamadas/${identificador}`).set({
+                    professor: professor,
+                    alunos: {}
+                });
+
+                localStorage.setItem("chamadaAtual", identificador);
+                exibirChamada(identificador);
+            }
+        });
+
+        function exibirChamada(identificador) {
+            const areaChamada = document.getElementById("area-chamada");
+            areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2><ul id="lista-alunos"></ul>`;
+
+            const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);
+            chamadaRef.off(); // Remover ouvintes anteriores para evitar duplicações
+            chamadaRef.on("value", (snapshot) => {
+                const alunos = snapshot.val();
+                const listaAlunos = document.getElementById("lista-alunos");
+                listaAlunos.innerHTML = "";
+
+                let alunosTexto = `Lista de Alunos - ${identificador}\n\n`;
+
+                for (const alunoId in alunos) {
+                    const { nome, localizacao, endereco, status } = alunos[alunoId];
+                    listaAlunos.innerHTML += `<li>${nome} - ${status} - <a href="${localizacao}" target="_blank">${status === "Na Escola" ? endereco : "Localização do Aluno"}</a></li>`;
+
+                    // Gerar o texto para o PDF
+                    alunosTexto += `${nome} - ${status}\n`;
+                    if (status === "Na Escola") {
+                        alunosTexto += `${endereco}\n\n`;
+                    } else {
+                        alunosTexto += `Localização: ${localizacao}\n\n`;
+                    }
+                }
+
+                // Exibir o botão para baixar o PDF apenas se houver alunos
+                const btnPdf = document.getElementById("btn-baixar-pdf");
+                if (alunos) {
+                    btnPdf.style.display = "block";
+                    btnPdf.onclick = () => baixarPDF(alunosTexto);
+                } else {
+                    btnPdf.style.display = "none";
+                }
+            });
+        }
+
+        function baixarPDF(texto) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("times", "normal");
+            doc.setFontSize(12);
+            doc.text(texto, 10, 10, { maxWidth: 180 });
+            doc.save("lista_chamada.pdf");
+        }
+
+        const chamadaSalva = localStorage.getItem("chamadaAtual");
+        if (chamadaSalva) exibirChamada(chamadaSalva);
+    </script>
+</body>
+</html>

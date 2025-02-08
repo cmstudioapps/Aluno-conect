@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Presença</title>
+</head>
+<body>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
+            authDomain: "escola-97256.firebaseapp.com",
+            databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",
+            projectId: "escola-97256",
+            storageBucket: "escola-97256.appspot.com",
+            messagingSenderId: "765009682973",
+            appId: "1:765009682973:web:d245f17dcdde0a28959cf4"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Coordenadas da escola
+        const ESCOLA_LAT = -8.513318;
+        const ESCOLA_LON = -39.309095;
+        const RAIO_ESCOLA_METROS = 50;
+
+        const ENDERECO_ESCOLA = "Escola Senador Paulo Guerra - Avenida Dona, Av. Brígida de Alençar, SN - Centro, Cabrobó - PE, 56180-000";
+
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Raio da Terra em metros
+            const rad = Math.PI / 180;
+            const dLat = (lat2 - lat1) * rad;
+            const dLon = (lon2 - lon1) * rad;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        async function registrarPresenca() {
+            const identificador = prompt("Digite o identificador da chamada:");
+            if (!identificador) return;
+
+            const nome = prompt("Digite seu nome:");
+            if (!nome) return;
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                const localizacao = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+                // Verifica se o aluno está dentro do raio da escola
+                const distancia = calcularDistancia(latitude, longitude, ESCOLA_LAT, ESCOLA_LON);
+                const statusPresenca = distancia <= RAIO_ESCOLA_METROS ? "Na Escola" : "Fora da Escola";
+
+                db.ref(`chamadas/${identificador}/alunos`).push({
+                    nome: nome,
+                    localizacao: localizacao, // URL do Google Maps
+                    endereco: ENDERECO_ESCOLA, // Endereço da escola
+                    status: statusPresenca
+                });
+
+                document.body.innerHTML = `<h2>Registro Concluído!</h2><p>${nome}, sua presença foi registrada como "${statusPresenca}".</p>`;
+            }, (error) => {
+                alert("Erro ao obter localização: " + error.message);
+            });
+        }
+
+        window.onload = registrarPresenca;
+    </script>
+</body>
+</html>
