@@ -72,8 +72,12 @@
             const identificador = await prompt("Digite o identificador da chamada:");
             if (!identificador) return;
 
-            const nome = await prompt("Digite seu nome:");
-            if (!nome) return;
+            let nome = localStorage.getItem("nomeUsuario");
+            if (!nome) {
+                nome = await prompt("Digite seu nome:");
+                if (!nome) return;
+                localStorage.setItem("nomeUsuario", nome);
+            }
 
             // Exibe carregamento
             const carregando = new Noty({ text: "Obtendo localização...", type: "info", timeout: false }).show();
