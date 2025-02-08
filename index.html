@@ -87,8 +87,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        document.getElementById("btn-criar-chamada").addEventListener("click", function() {
-            const professor = prompt("Digite seu nome:");
+        document.getElementById("btn-criar-chamada").addEventListener("click",async function() {
+            const professor = await prompt("Digite seu nome:");
             if (professor) {
                 const codigo = Math.floor(100 + Math.random() * 900);
                 const identificador = `${professor}-${codigo}`;
