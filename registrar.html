@@ -1,73 +1,41 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<script type="module">
-
-            const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
-
-            const LIB_KEY = "interceptarAlertLib";
-
-
-
-            async function loadCustomAlert() {
-
-                const storedLib = localStorage.getItem(LIB_KEY);
-
-
-
-                if (storedLib) {
-
-                    eval(storedLib);
-
-                } else {
-
-                    try {
-
-                        const response = await fetch(GITHUB_URL);
-
-                        const script = await response.text();
-
-                        localStorage.setItem(LIB_KEY, script);
-
-                        eval(script);
-
-                    } catch (error) {
-
-                        alert("Erro ao carregar a biblioteca: " + error.message);
-
-                    }
-
-                }
-
-            }
-
-            loadCustomAlert();
-
-            </script>
-<script>
-if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            console.log("Latitude:", position.coords.latitude);
-            console.log("Longitude:", position.coords.longitude);
-        },
-        (error) => {
-            console.error("Erro ao obter localização:", error.message);
-        }
-    );
-} else {
-    console.error("Geolocalização não suportada pelo navegador.");
-}
-
-</script >
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Presença</title>
-</head>
-<body>
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <!-- Noty.js (para notificações) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.js"></script>
+
+    <script type="module">
+        const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
+        const LIB_KEY = "interceptarAlertLib";
+
+        async function loadCustomAlert() {
+            const storedLib = localStorage.getItem(LIB_KEY);
+            if (storedLib) {
+                eval(storedLib);
+            } else {
+                try {
+                    const response = await fetch(GITHUB_URL);
+                    const script = await response.text();
+                    localStorage.setItem(LIB_KEY, script);
+                    eval(script);
+                } catch (error) {
+                    new Noty({ text: "Erro ao carregar a biblioteca: " + error.message, type: "error", timeout: 3000 }).show();
+                }
+            }
+        }
+
+        loadCustomAlert();
+    </script>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
@@ -86,7 +54,6 @@ if ("geolocation" in navigator) {
         const ESCOLA_LAT = -8.513318;
         const ESCOLA_LON = -39.309095;
         const RAIO_ESCOLA_METROS = 50;
-
         const ENDERECO_ESCOLA = "Escola Senador Paulo Guerra - Avenida Dona, Av. Brígida de Alençar, SN - Centro, Cabrobó - PE, 56180-000";
 
         function calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -95,8 +62,8 @@ if ("geolocation" in navigator) {
             const dLat = (lat2 - lat1) * rad;
             const dLon = (lon2 - lon1) * rad;
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
-                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
@@ -108,28 +75,34 @@ if ("geolocation" in navigator) {
             const nome = await prompt("Digite seu nome:");
             if (!nome) return;
 
+            // Exibe carregamento
+            const carregando = new Noty({ text: "Obtendo localização...", type: "info", timeout: false }).show();
+
             navigator.geolocation.getCurrentPosition(async (position) => {
+                carregando.close(); // Fecha a notificação de carregamento
+
                 const { latitude, longitude } = position.coords;
                 const localizacao = `https://www.google.com/maps?q=${latitude},${longitude}`;
-
-                // Verifica se o aluno está dentro do raio da escola
                 const distancia = calcularDistancia(latitude, longitude, ESCOLA_LAT, ESCOLA_LON);
                 const statusPresenca = distancia <= RAIO_ESCOLA_METROS ? "Na Escola" : "Fora da Escola";
 
                 db.ref(`chamadas/${identificador}/alunos`).push({
                     nome: nome,
-                    localizacao: localizacao, // URL do Google Maps
-                    endereco: ENDERECO_ESCOLA, // Endereço da escola
+                    localizacao: localizacao,
+                    endereco: ENDERECO_ESCOLA,
                     status: statusPresenca
                 });
 
-                document.body.innerHTML = `<h2>Registro Concluído!</h2><p>${nome}, sua presença foi registrada como "${statusPresenca}".</p>`;
+                new Noty({ text: `${nome}, sua presença foi registrada como "${statusPresenca}".`, type: "success", timeout: 4000 }).show();
             }, (error) => {
-                alert("Erro ao obter localização: " + error.message);
+                carregando.close();
+                new Noty({ text: "Erro ao obter localização: " + error.message, type: "error", timeout: 3000 }).show();
             });
         }
 
         window.onload = registrarPresenca;
     </script>
+</head>
+<body>
 </body>
 </html>
