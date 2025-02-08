@@ -1,49 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<script type="module">
 
-            const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
-
-            const LIB_KEY = "interceptarAlertLib";
-
-
-
-            async function loadCustomAlert() {
-
-                const storedLib = localStorage.getItem(LIB_KEY);
-
-
-
-                if (storedLib) {
-
-                    eval(storedLib);
-
-                } else {
-
-                    try {
-
-                        const response = await fetch(GITHUB_URL);
-
-                        const script = await response.text();
-
-                        localStorage.setItem(LIB_KEY, script);
-
-                        eval(script);
-
-                    } catch (error) {
-
-                        alert("Erro ao carregar a biblioteca: " + error.message);
-
-                    }
-
-                }
-
-            }
-
-            loadCustomAlert();
-
-            </script>
 <script>
 if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
