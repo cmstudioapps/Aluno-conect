@@ -144,6 +144,7 @@
         function obterLocalizacao() {
             const carregando = new Noty({ text: "Obtendo localização...", type: "info", timeout: false }).show();
 
+scrollToTop()
             navigator.geolocation.getCurrentPosition((position) => {
                 carregando.close();
                 const { latitude, longitude } = position.coords;
@@ -167,6 +168,12 @@
         }
 
         window.onload = registrarPresenca;
+
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+
     </script>
 </head>
 <body>
