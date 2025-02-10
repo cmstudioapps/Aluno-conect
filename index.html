@@ -1,57 +1,49 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
-<script type="module">
-
-            const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
-
-            const LIB_KEY = "interceptarAlertLib";
-
-
-
-            async function loadCustomAlert() {
-
-                const storedLib = localStorage.getItem(LIB_KEY);
-
-
-
-                if (storedLib) {
-
-                    eval(storedLib);
-
-                } else {
-
-                    try {
-
-                        const response = await fetch(GITHUB_URL);
-
-                        const script = await response.text();
-
-                        localStorage.setItem(LIB_KEY, script);
-
-                        eval(script);
-
-                    } catch (error) {
-
-                        alert("Erro ao carregar a biblioteca: " + error.message);
-
-                    }
-
-                }
-
-            }
-
-            loadCustomAlert();
-
-            </script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conect Aluno</title>
+    <title>Conect Aluno - Registro de Chamada</title>
+    
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* Estilos do modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+        }
+        .modal img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .modal .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -62,14 +54,20 @@
         <div id="area-chamada">
             <p>Nenhuma chamada criada ainda.</p>
         </div>
-
-        <!-- Botão para baixar PDF -->
         <button id="btn-baixar-pdf" style="display: none;">Baixar Lista em PDF</button>
     </main>
 
     <button id="btn-criar-chamada" class="floating-btn">
         <i class="fas fa-plus"></i>
     </button>
+
+    <!-- Modal para visualizar a foto -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <img id="modal-img" src="" alt="Foto do Aluno">
+        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -87,7 +85,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        document.getElementById("btn-criar-chamada").addEventListener("click",async function() {
+        document.getElementById("btn-criar-chamada").addEventListener("click", async function() {
             const professor = await prompt("Digite seu nome:");
             if (professor) {
                 const codigo = Math.floor(100 + Math.random() * 900);
@@ -108,7 +106,7 @@
             areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2><ul id="lista-alunos"></ul>`;
 
             const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);
-            chamadaRef.off(); // Remover ouvintes anteriores para evitar duplicações
+            chamadaRef.off();
             chamadaRef.on("value", (snapshot) => {
                 const alunos = snapshot.val();
                 const listaAlunos = document.getElementById("lista-alunos");
@@ -117,10 +115,15 @@
                 let alunosTexto = `Lista de Alunos - ${identificador}\n\n`;
 
                 for (const alunoId in alunos) {
-                    const { nome, localizacao, endereco, status } = alunos[alunoId];
-                    listaAlunos.innerHTML += `<li>${nome} - ${status} - <a href="${localizacao}" target="_blank">${status === "Na Escola" ? endereco : "Localização do Aluno"}</a></li>`;
+                    const { nome, localizacao, endereco, status, foto } = alunos[alunoId];
+                    
+                    listaAlunos.innerHTML += `
+                        <li>
+                            <img src="${foto}" alt="Foto de ${nome}" width="50" height="50" style="border-radius: 50%;">
+                            ${nome} - ${status} - <a href="${localizacao}" target="_blank">${status === "Na Escola" ? endereco : "Localização do Aluno"}</a>
+                            <button onclick="verFoto('${foto}')">Ver Foto</button>
+                        </li>`;
 
-                    // Gerar o texto para o PDF
                     alunosTexto += `${nome} - ${status}\n`;
                     if (status === "Na Escola") {
                         alunosTexto += `${endereco}\n\n`;
@@ -129,7 +132,6 @@
                     }
                 }
 
-                // Exibir o botão para baixar o PDF apenas se houver alunos
                 const btnPdf = document.getElementById("btn-baixar-pdf");
                 if (alunos) {
                     btnPdf.style.display = "block";
@@ -148,6 +150,25 @@
             doc.text(texto, 10, 10, { maxWidth: 180 });
             doc.save("lista_chamada.pdf");
         }
+
+        function verFoto(foto) {
+            const modal = document.getElementById("modal");
+            const modalImg = document.getElementById("modal-img");
+
+            modalImg.src = foto;
+            modal.style.display = "flex";
+        }
+
+        document.querySelector(".close-btn").addEventListener("click", function() {
+            document.getElementById("modal").style.display = "none";
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById("modal");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
 
         const chamadaSalva = localStorage.getItem("chamadaAtual");
         if (chamadaSalva) exibirChamada(chamadaSalva);
