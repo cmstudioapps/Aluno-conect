@@ -13,7 +13,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.js"></script>
 
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             display: flex;
             justify-content: center;
@@ -22,16 +30,38 @@
             background-color: #f4f4f4;
             flex-direction: column;
             text-align: center;
+            overflow: hidden;
         }
         video, canvas {
             display: none;
-            margin-top: 10px;
+            max-width: 100%;
             border-radius: 10px;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
         }
         #capturarFoto {
             display: none;
-            margin-top: 10px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s ease-in-out;
+        }
+        #capturarFoto:hover {
+            background-color: #0056b3;
+        }
+        #capturarFoto i {
+            pointer-events: none;
         }
     </style>
 
@@ -105,7 +135,7 @@
             }
 
             document.getElementById("video").style.display = "block";
-            document.getElementById("capturarFoto").style.display = "block";
+            document.getElementById("capturarFoto").style.display = "flex";
 
             iniciarCamera();
         }
@@ -133,18 +163,22 @@
 
             fotoBase64 = canvas.toDataURL("image/jpeg");
 
-            video.srcObject.getTracks().forEach(track => track.stop());
+            encerrarCamera();
+            obterLocalizacao();
+        }
+
+        function encerrarCamera() {
+            const video = document.getElementById("video");
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
             video.style.display = "none";
             document.getElementById("capturarFoto").style.display = "none";
-            canvas.style.display = "block";
-
-            obterLocalizacao();
         }
 
         function obterLocalizacao() {
             const carregando = new Noty({ text: "Obtendo localização...", type: "info", timeout: false }).show();
 
-scrollToTop()
             navigator.geolocation.getCurrentPosition((position) => {
                 carregando.close();
                 const { latitude, longitude } = position.coords;
@@ -168,17 +202,11 @@ scrollToTop()
         }
 
         window.onload = registrarPresenca;
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-
     </script>
 </head>
 <body>
     <video id="video"></video>
-    <button id="capturarFoto" onclick="capturarFoto()">Capturar Foto</button>
+    <button id="capturarFoto" onclick="capturarFoto()"><i class="fa fa-camera"></i></button>
     <canvas id="canvas"></canvas>
 </body>
 </html>
