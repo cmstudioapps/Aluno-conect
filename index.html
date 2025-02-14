@@ -1,177 +1,224 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conect Aluno - Registro de Chamada</title>
-    
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <style>
-        /* Estilos do modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            position: relative;
-        }
-        .modal img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-        }
-        .modal .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 20px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conect Aluno - Registro de Chamada</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Estilos do modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      position: relative;
+    }
+    .modal img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+    .modal .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    /* Estilos da lista de chamadas */
+    #lista-chamadas {
+      margin: 20px;
+    }
+    #lista-chamadas ul {
+      list-style: none;
+      padding: 0;
+    }
+    #lista-chamadas li {
+      margin: 5px 0;
+    }
+    #lista-chamadas li a {
+      text-decoration: none;
+      color: #007bff;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Conect Aluno - Registro de Chamada</h1>
-    </header>
-
-    <main>
-        <div id="area-chamada">
-            <p>Nenhuma chamada criada ainda.</p>
-        </div>
-        <button id="btn-baixar-pdf" style="display: none;">Baixar Lista em PDF</button>
-    </main>
-
-    <button id="btn-criar-chamada" class="floating-btn">
-        <i class="fas fa-plus"></i>
-    </button>
-
-    <!-- Modal para visualizar a foto -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <img id="modal-img" src="" alt="Foto do Aluno">
-        </div>
+  <header>
+    <h1>Conect Aluno - Registro de Chamada</h1>
+    <p id="nome-professor"></p>
+  </header>
+  <main>
+    <div id="lista-chamadas">
+      <h2>Minhas Chamadas</h2>
+      <ul id="lista-chamadas-ul">
+        <li>Nenhuma chamada criada ainda.</li>
+      </ul>
     </div>
+    <div id="area-chamada">
+      <p>Selecione uma chamada para visualizar os detalhes.</p>
+    </div>
+    <button id="btn-baixar-pdf" style="display: none;">Baixar Lista em PDF</button>
+  </main>
+  <button id="btn-criar-chamada" class="floating-btn">
+    <i class="fas fa-plus"></i>
+  </button>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
-            authDomain: "escola-97256.firebaseapp.com",
-            databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",
-            projectId: "escola-97256",
-            storageBucket: "escola-97256.appspot.com",
-            messagingSenderId: "765009682973",
-            appId: "1:765009682973:web:d245f17dcdde0a28959cf4"
-        };
+  <!-- Modal para visualizar a foto -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <img id="modal-img" src="" alt="Foto do Aluno">
+    </div>
+  </div>
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
+      authDomain: "escola-97256.firebaseapp.com",
+      databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",
+      projectId: "escola-97256",
+      storageBucket: "escola-97256.appspot.com",
+      messagingSenderId: "765009682973",
+      appId: "1:765009682973:web:d245f17dcdde0a28959cf4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        document.getElementById("btn-criar-chamada").addEventListener("click", async function() {
-            const professor = await prompt("Digite seu nome:");
-            if (professor) {
-                const codigo = Math.floor(100 + Math.random() * 900);
-                const identificador = `${professor}-${codigo}`;
+    // Recupera ou solicita o nome do professor
+    let professor = localStorage.getItem("nomeProfessor");
+    if (!professor) {
+      professor = prompt("Digite seu nome:");
+      if (professor) {
+        localStorage.setItem("nomeProfessor", professor);
+      }
+    }
+    document.getElementById("nome-professor").innerText = "Professor: " + professor;
 
-                db.ref(`chamadas/${identificador}`).set({
-                    professor: professor,
-                    alunos: {}
-                });
-
-                localStorage.setItem("chamadaAtual", identificador);
-                exibirChamada(identificador);
-            }
-        });
-
-        function exibirChamada(identificador) {
-            const areaChamada = document.getElementById("area-chamada");
-            areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2><ul id="lista-alunos"></ul>`;
-
-            const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);
-            chamadaRef.off();
-            chamadaRef.on("value", (snapshot) => {
-                const alunos = snapshot.val();
-                const listaAlunos = document.getElementById("lista-alunos");
-                listaAlunos.innerHTML = "";
-
-                let alunosTexto = `Lista de Alunos - ${identificador}\n\n`;
-
-                for (const alunoId in alunos) {
-                    const { nome, localizacao, endereco, status, foto } = alunos[alunoId];
-                    
-                    listaAlunos.innerHTML += `
-                        <li>
-                            <img src="${foto}" alt="Foto de ${nome}" width="50" height="50" style="border-radius: 50%;">
-                            ${nome} - ${status} - <a href="${localizacao}" target="_blank">${status === "Na Escola" ? endereco : "Localização do Aluno"}</a>
-                            <button onclick="verFoto('${foto}')">Ver Foto</button>
-                        </li>`;
-
-                    alunosTexto += `${nome} - ${status}\n`;
-                    if (status === "Na Escola") {
-                        alunosTexto += `${endereco}\n\n`;
-                    } else {
-                        alunosTexto += `Localização: ${localizacao}\n\n`;
-                    }
-                }
-
-                const btnPdf = document.getElementById("btn-baixar-pdf");
-                if (alunos) {
-                    btnPdf.style.display = "block";
-                    btnPdf.onclick = () => baixarPDF(alunosTexto);
-                } else {
-                    btnPdf.style.display = "none";
-                }
-            });
+    // Carrega as chamadas criadas por este professor
+    function loadChamadas() {
+      const chamadasRef = db.ref("chamadas").orderByChild("professor").equalTo(professor);
+      chamadasRef.on("value", snapshot => {
+        const chamadas = snapshot.val();
+        const listaChamadasUl = document.getElementById("lista-chamadas-ul");
+        listaChamadasUl.innerHTML = "";
+        if (chamadas) {
+          for (const chamadaId in chamadas) {
+            const chamada = chamadas[chamadaId];
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#" onclick="exibirChamada('${chamadaId}')">
+                              Chamada: ${chamadaId} - Selfie: ${chamada.solicitarSelfie ? 'Sim' : 'Não'}
+                            </a>`;
+            listaChamadasUl.appendChild(li);
+          }
+        } else {
+          listaChamadasUl.innerHTML = "<li>Nenhuma chamada criada ainda.</li>";
         }
+      });
+    }
+    loadChamadas();
 
-        function baixarPDF(texto) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFont("times", "normal");
-            doc.setFontSize(12);
-            doc.text(texto, 10, 10, { maxWidth: 180 });
-            doc.save("lista_chamada.pdf");
+    // Cria uma nova chamada (perguntando se solicitar selfie)
+    document.getElementById("btn-criar-chamada").addEventListener("click", async function() {
+      const solicitarSelfie = confirm("Deseja solicitar selfie para essa chamada?");
+      const codigo = Math.floor(100 + Math.random() * 900);
+      // Incluímos também o timestamp para garantir identificadores únicos
+      const identificador = `${professor}-${codigo}-${Date.now()}`;
+      db.ref(`chamadas/${identificador}`).set({
+        professor: professor,
+        solicitarSelfie: solicitarSelfie,
+        alunos: {}
+      });
+      exibirChamada(identificador);
+    });
+
+    // Exibe a chamada selecionada, listando os alunos inscritos
+    function exibirChamada(identificador) {
+      const areaChamada = document.getElementById("area-chamada");
+      areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2><ul id="lista-alunos"></ul>`;
+      const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);
+      chamadaRef.off();
+      chamadaRef.on("value", (snapshot) => {
+        const alunos = snapshot.val();
+        const listaAlunos = document.getElementById("lista-alunos");
+        listaAlunos.innerHTML = "";
+        let alunosTexto = `Lista de Alunos - ${identificador}\n\n`;
+        for (const alunoId in alunos) {
+          const { nome, localizacao, endereco, status, foto } = alunos[alunoId];
+          listaAlunos.innerHTML += `
+            <li>
+              <img src="${foto}" alt="Foto de ${nome}" width="50" height="50" style="border-radius: 50%;">
+              ${nome} - ${status} - 
+              <a href="${localizacao}" target="_blank">
+                ${status === "Na Escola" ? endereco : "Localização do Aluno"}
+              </a>
+              <button onclick="verFoto('${foto}')">Ver Foto</button>
+            </li>`;
+          alunosTexto += `${nome} - ${status}\n`;
+          if (status === "Na Escola") {
+            alunosTexto += `${endereco}\n\n`;
+          } else {
+            alunosTexto += `Localização: ${localizacao}\n\n`;
+          }
         }
-
-        function verFoto(foto) {
-            const modal = document.getElementById("modal");
-            const modalImg = document.getElementById("modal-img");
-
-            modalImg.src = foto;
-            modal.style.display = "flex";
+        const btnPdf = document.getElementById("btn-baixar-pdf");
+        if (alunos) {
+          btnPdf.style.display = "block";
+          btnPdf.onclick = () => baixarPDF(alunosTexto);
+        } else {
+          btnPdf.style.display = "none";
         }
+      });
+    }
 
-        document.querySelector(".close-btn").addEventListener("click", function() {
-            document.getElementById("modal").style.display = "none";
-        });
+    // Gera o PDF com a lista de alunos
+    function baixarPDF(texto) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFont("times", "normal");
+      doc.setFontSize(12);
+      doc.text(texto, 10, 10, { maxWidth: 180 });
+      doc.save("lista_chamada.pdf");
+    }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById("modal");
-            if (event.target === modal) {
-                modal.style.display = "none";
-            }
-        };
+    // Exibe o modal com a foto do aluno
+    function verFoto(foto) {
+      const modal = document.getElementById("modal");
+      const modalImg = document.getElementById("modal-img");
+      modalImg.src = foto;
+      modal.style.display = "flex";
+    }
 
-        const chamadaSalva = localStorage.getItem("chamadaAtual");
-        if (chamadaSalva) exibirChamada(chamadaSalva);
-    </script>
+    document.querySelector(".close-btn").addEventListener("click", function() {
+      document.getElementById("modal").style.display = "none";
+    });
+
+    window.onclick = function(event) {
+      const modal = document.getElementById("modal");
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+  </script>
 </body>
 </html>
