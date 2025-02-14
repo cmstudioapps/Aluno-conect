@@ -195,6 +195,27 @@
       }
     });
 
+    // Função para gerar um identificador único verificando em todos os nós
+    function generateUniqueIdentifier() {
+      return new Promise((resolve, reject) => {
+        function attempt() {
+          const codigo = Math.floor(1000 + Math.random() * 9000);
+          const identificador = codigo.toString();
+          db.ref("chamadas/" + identificador).once("value")
+            .then(snapshot => {
+              if (snapshot.exists()) {
+                // Se já existe, tenta novamente
+                attempt();
+              } else {
+                resolve(identificador);
+              }
+            })
+            .catch(error => reject(error));
+        }
+        attempt();
+      });
+    }
+
     // Carrega as chamadas do professor
     function loadChamadas() {
       const chamadasRef = db.ref("chamadas").orderByChild("professor").equalTo(professor);
@@ -221,18 +242,20 @@
     }
     loadChamadas();
 
-    // Cria uma nova chamada usando um identificador menor (4 dígitos) e armazena a data/hora
+    // Cria uma nova chamada com identificador único e armazena a data/hora
     document.getElementById("btn-criar-chamada").addEventListener("click", function() {
-      const codigo = Math.floor(1000 + Math.random() * 9000);
-      const identificador = codigo.toString();
-      const dataChamada = new Date().toLocaleString('pt-BR');
-      db.ref(`chamadas/${identificador}`).set({
-        professor: professor,
-        solicitarSelfie: solicitarSelfieAtivo,
-        alunos: {},
-        dataChamada: dataChamada
+      generateUniqueIdentifier().then(identificador => {
+        const dataChamada = new Date().toLocaleString('pt-BR');
+        db.ref(`chamadas/${identificador}`).set({
+          professor: professor,
+          solicitarSelfie: solicitarSelfieAtivo,
+          alunos: {},
+          dataChamada: dataChamada
+        });
+        exibirChamada(identificador);
+      }).catch(error => {
+        alert("Erro ao gerar identificador único: " + error.message);
       });
-      exibirChamada(identificador);
     });
 
     // Exibe a chamada selecionada, listando os alunos inscritos e mostrando o horário da chamada
