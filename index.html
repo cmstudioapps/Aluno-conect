@@ -7,7 +7,52 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <!-- Removido jsPDF, pois não será mais utilizado -->
+  
+  <!-- Inclusão da biblioteca interceptarAlert.js -->
+<script type="module">
+
+            const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
+
+            const LIB_KEY = "interceptarAlertLib";
+
+
+
+            async function loadCustomAlert() {
+
+                const storedLib = localStorage.getItem(LIB_KEY);
+
+
+
+                if (storedLib) {
+
+                    eval(storedLib);
+
+                } else {
+
+                    try {
+
+                        const response = await fetch(GITHUB_URL);
+
+                        const script = await response.text();
+
+                        localStorage.setItem(LIB_KEY, script);
+
+                        eval(script);
+
+                    } catch (error) {
+
+                        alert("Erro ao carregar a biblioteca: " + error.message);
+
+                    }
+
+                }
+
+            }
+
+            loadCustomAlert();
+
+            </script>
+  
   <style>
     /* Estilos do modal */
     .modal {
@@ -305,21 +350,26 @@
     }
 
     // Exclui uma chamada após confirmação
-    function excluirChamada(identificador) {
-      if (confirm("Tem certeza que deseja excluir essa chamada?")) {
-        db.ref(`chamadas/${identificador}`).remove()
-          .then(() => {
-            const areaChamada = document.getElementById("area-chamada");
-            if (areaChamada.innerHTML.includes(identificador)) {
-              areaChamada.innerHTML = "<p>Selecione uma chamada para visualizar os detalhes.</p>";
-            }
-            alert("Chamada excluída com sucesso.");
-          })
-          .catch(error => {
-            alert("Erro ao excluir chamada: " + error.message);
-          });
-      }
-    }
+    async function excluirChamada(identificador) {
+  const resposta = await new Promise((resolve) => {
+    const confirmResult = confirm("Tem certeza que deseja excluir essa chamada?");
+    resolve(confirmResult);
+  });
+
+  if (resposta) {
+    db.ref(`chamadas/${identificador}`).remove()
+      .then(() => {
+        const areaChamada = document.getElementById("area-chamada");
+        if (areaChamada.innerHTML.includes(identificador)) {
+          areaChamada.innerHTML = "<p>Selecione uma chamada para visualizar os detalhes.</p>";
+        }
+        alert("Chamada excluída com sucesso.");
+      })
+      .catch(error => {
+        alert("Erro ao excluir chamada: " + error.message);
+      });
+  }
+}
 
     // Envia o conteúdo da lista via WhatsApp para o número do professor, incluindo data/hora
     function enviarWhatsApp(texto) {
