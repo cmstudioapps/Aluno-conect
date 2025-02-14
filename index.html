@@ -221,54 +221,63 @@
     }
     loadChamadas();
 
-    // Cria uma nova chamada usando um identificador menor (4 dígitos)
+    // Cria uma nova chamada usando um identificador menor (4 dígitos) e armazena a data/hora
     document.getElementById("btn-criar-chamada").addEventListener("click", function() {
       const codigo = Math.floor(1000 + Math.random() * 9000);
       const identificador = codigo.toString();
+      const dataChamada = new Date().toLocaleString('pt-BR');
       db.ref(`chamadas/${identificador}`).set({
         professor: professor,
         solicitarSelfie: solicitarSelfieAtivo,
-        alunos: {}
+        alunos: {},
+        dataChamada: dataChamada
       });
       exibirChamada(identificador);
     });
 
-    // Exibe a chamada selecionada, listando os alunos inscritos
+    // Exibe a chamada selecionada, listando os alunos inscritos e mostrando o horário da chamada
     function exibirChamada(identificador) {
       const areaChamada = document.getElementById("area-chamada");
-      areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2><ul id="lista-alunos"></ul>`;
-      const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);
-      chamadaRef.off();
-      chamadaRef.on("value", (snapshot) => {
-        const alunos = snapshot.val();
-        const listaAlunos = document.getElementById("lista-alunos");
-        listaAlunos.innerHTML = "";
-        let alunosTexto = `Lista de Alunos - ${identificador}\n\n`;
-        for (const alunoId in alunos) {
-          const { nome, localizacao, endereco, status, foto } = alunos[alunoId];
-          listaAlunos.innerHTML += `
-            <li>
-              <img src="${foto}" alt="Foto de ${nome}" width="50" height="50" style="border-radius: 50%;">
-              ${nome} - ${status} - 
-              <a href="${localizacao}" target="_blank">
-                ${status === "Na Escola" ? endereco : "Localização do Aluno"}
-              </a>
-              <button onclick="verFoto('${foto}')">Ver Foto</button>
-            </li>`;
-          alunosTexto += `${nome} - ${status}\n`;
-          if (status === "Na Escola") {
-            alunosTexto += `${endereco}\n\n`;
-          } else {
-            alunosTexto += `Localização: ${localizacao}\n\n`;
+      // Obtém os dados da chamada para recuperar a data/hora
+      db.ref(`chamadas/${identificador}`).once("value").then(snapshot => {
+        const callData = snapshot.val();
+        const dataChamada = callData.dataChamada || "Data não informada";
+        areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2>
+                                  <p>Realizada em: ${dataChamada}</p>
+                                  <ul id="lista-alunos"></ul>`;
+        const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);
+        chamadaRef.off();
+        chamadaRef.on("value", (snapshot) => {
+          const alunos = snapshot.val();
+          const listaAlunos = document.getElementById("lista-alunos");
+          listaAlunos.innerHTML = "";
+          let alunosTexto = `Lista de Alunos - ${identificador}\nRealizada em: ${dataChamada}\n\n`;
+          for (const alunoId in alunos) {
+            const { nome, localizacao, endereco, status, foto } = alunos[alunoId];
+            listaAlunos.innerHTML += `
+              <li>
+                <img src="${foto}" alt="Foto de ${nome}" width="50" height="50" style="border-radius: 50%;">
+                ${nome} - ${status} - 
+                <a href="${localizacao}" target="_blank">
+                  ${status === "Na Escola" ? endereco : "Localização do Aluno"}
+                </a>
+                <button onclick="verFoto('${foto}')">Ver Foto</button>
+              </li>`;
+            alunosTexto += `${nome} - ${status}\n`;
+            if (status === "Na Escola") {
+              alunosTexto += `${endereco}\n\n`;
+            } else {
+              alunosTexto += `Localização: ${localizacao}\n\n`;
+            }
           }
-        }
-        const btnWhatsApp = document.getElementById("btn-enviar-whatsapp");
-        if (alunos) {
-          btnWhatsApp.style.display = "block";
-          btnWhatsApp.onclick = () => enviarWhatsApp(alunosTexto);
-        } else {
-          btnWhatsApp.style.display = "none";
-        }
+          const btnWhatsApp = document.getElementById("btn-enviar-whatsapp");
+          if (alunos) {
+            btnWhatsApp.style.display = "block";
+            btnWhatsApp.onclick = () => enviarWhatsApp(alunosTexto);
+          } else {
+            btnWhatsApp.style.display = "none";
+          }
+        });
       });
     }
 
@@ -289,9 +298,8 @@
       }
     }
 
-    // Envia o conteúdo da lista via WhatsApp para o número do professor
+    // Envia o conteúdo da lista via WhatsApp para o número do professor, incluindo data/hora
     function enviarWhatsApp(texto) {
-      // Certifica-se de que o número do WhatsApp esteja definido
       let professorWhatsApp = localStorage.getItem("whatsAppProfessor");
       if (!professorWhatsApp) {
         professorWhatsApp = prompt("Digite seu número do WhatsApp (apenas números com código do país, ex.: 5511999998888):");
