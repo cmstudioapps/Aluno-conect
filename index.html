@@ -51,11 +51,56 @@
     }
     #lista-chamadas li {
       margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     #lista-chamadas li a {
       text-decoration: none;
       color: #007bff;
       cursor: pointer;
+    }
+    /* Toggle button style */
+    #toggle-selfie {
+      margin: 10px;
+      padding: 8px 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #toggle-selfie.off {
+      background-color: #dc3545;
+    }
+    /* Floating button style */
+    .floating-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s ease-in-out;
+    }
+    .floating-btn:hover {
+      background-color: #218838;
+    }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 18px;
     }
   </style>
 </head>
@@ -63,6 +108,7 @@
   <header>
     <h1>Conect Aluno - Registro de Chamada</h1>
     <p id="nome-professor"></p>
+    <button id="toggle-selfie">Solicitar Selfie: ON</button>
   </header>
   <main>
     <div id="lista-chamadas">
@@ -115,7 +161,20 @@
     }
     document.getElementById("nome-professor").innerText = "Professor: " + professor;
 
-    // Carrega as chamadas criadas por este professor
+    // Variável para controle do toggle de selfie
+    let solicitarSelfieAtivo = true;
+    const toggleSelfieBtn = document.getElementById("toggle-selfie");
+    toggleSelfieBtn.addEventListener("click", function() {
+      solicitarSelfieAtivo = !solicitarSelfieAtivo;
+      toggleSelfieBtn.innerText = "Solicitar Selfie: " + (solicitarSelfieAtivo ? "ON" : "OFF");
+      if (solicitarSelfieAtivo) {
+        toggleSelfieBtn.classList.remove("off");
+      } else {
+        toggleSelfieBtn.classList.add("off");
+      }
+    });
+
+    // Carrega as chamadas do professor
     function loadChamadas() {
       const chamadasRef = db.ref("chamadas").orderByChild("professor").equalTo(professor);
       chamadasRef.on("value", snapshot => {
@@ -126,9 +185,12 @@
           for (const chamadaId in chamadas) {
             const chamada = chamadas[chamadaId];
             const li = document.createElement("li");
-            li.innerHTML = `<a href="#" onclick="exibirChamada('${chamadaId}')">
-                              Chamada: ${chamadaId} - Selfie: ${chamada.solicitarSelfie ? 'Sim' : 'Não'}
-                            </a>`;
+            li.innerHTML = `
+              <span>
+                <a href="#" onclick="exibirChamada('${chamadaId}')">Chamada: ${chamadaId} - Selfie: ${chamada.solicitarSelfie ? 'Sim' : 'Não'}</a>
+              </span>
+              <button class="delete-btn" onclick="excluirChamada('${chamadaId}')"><i class="fas fa-trash-alt"></i></button>
+            `;
             listaChamadasUl.appendChild(li);
           }
         } else {
@@ -138,15 +200,13 @@
     }
     loadChamadas();
 
-    // Cria uma nova chamada (perguntando se solicitar selfie)
-    document.getElementById("btn-criar-chamada").addEventListener("click", async function() {
-      const solicitarSelfie = confirm("Deseja solicitar selfie para essa chamada?");
-      const codigo = Math.floor(100 + Math.random() * 900);
-      // Incluímos também o timestamp para garantir identificadores únicos
-      const identificador = `${professor}-${codigo}-${Date.now()}`;
+    // Cria uma nova chamada usando um identificador menor (4 dígitos)
+    document.getElementById("btn-criar-chamada").addEventListener("click", function() {
+      const codigo = Math.floor(1000 + Math.random() * 9000);
+      const identificador = codigo.toString();
       db.ref(`chamadas/${identificador}`).set({
         professor: professor,
-        solicitarSelfie: solicitarSelfie,
+        solicitarSelfie: solicitarSelfieAtivo,
         alunos: {}
       });
       exibirChamada(identificador);
@@ -189,6 +249,23 @@
           btnPdf.style.display = "none";
         }
       });
+    }
+
+    // Exclui uma chamada após confirmação
+    function excluirChamada(identificador) {
+      if (confirm("Tem certeza que deseja excluir essa chamada?")) {
+        db.ref(`chamadas/${identificador}`).remove()
+          .then(() => {
+            const areaChamada = document.getElementById("area-chamada");
+            if (areaChamada.innerHTML.includes(identificador)) {
+              areaChamada.innerHTML = "<p>Selecione uma chamada para visualizar os detalhes.</p>";
+            }
+            alert("Chamada excluída com sucesso.");
+          })
+          .catch(error => {
+            alert("Erro ao excluir chamada: " + error.message);
+          });
+      }
     }
 
     // Gera o PDF com a lista de alunos
