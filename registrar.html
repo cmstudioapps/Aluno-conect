@@ -1,212 +1,227 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Presença</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Presença</title>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    <!-- Noty.js (para notificações) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.js"></script>
+  <!-- Noty.js (para notificações) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noty/3.1.4/noty.min.js"></script>
 
-    <!-- FontAwesome para ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <!-- FontAwesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+      flex-direction: column;
+      text-align: center;
+      overflow: hidden;
+    }
+    video, canvas {
+      display: none;
+      max-width: 100%;
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    #capturarFoto {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 24px;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s ease-in-out;
+    }
+    #capturarFoto:hover {
+      background-color: #0056b3;
+    }
+    #capturarFoto i {
+      pointer-events: none;
+    }
+  </style>
+
+  <script type="module">
+    const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
+    const LIB_KEY = "interceptarAlertLib";
+
+    async function loadCustomAlert() {
+      const storedLib = localStorage.getItem(LIB_KEY);
+      if (storedLib) {
+        eval(storedLib);
+      } else {
+        try {
+          const response = await fetch(GITHUB_URL);
+          const script = await response.text();
+          localStorage.setItem(LIB_KEY, script);
+          eval(script);
+        } catch (error) {
+          new Noty({ text: "Erro ao carregar a biblioteca: " + error.message, type: "error", timeout: 3000 }).show();
         }
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-            flex-direction: column;
-            text-align: center;
-            overflow: hidden;
-        }
-        video, canvas {
-            display: none;
-            max-width: 100%;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        #capturarFoto {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-            transition: background 0.3s ease-in-out;
-        }
-        #capturarFoto:hover {
-            background-color: #0056b3;
-        }
-        #capturarFoto i {
-            pointer-events: none;
-        }
-    </style>
+      }
+    }
+    loadCustomAlert();
+  </script>
 
-    <script type="module">
-        const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
-        const LIB_KEY = "interceptarAlertLib";
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
+      authDomain: "escola-97256.firebaseapp.com",
+      databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",
+      projectId: "escola-97256",
+      storageBucket: "escola-97256.appspot.com",
+      messagingSenderId: "765009682973",
+      appId: "1:765009682973:web:d245f17dcdde0a28959cf4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        async function loadCustomAlert() {
-            const storedLib = localStorage.getItem(LIB_KEY);
-            if (storedLib) {
-                eval(storedLib);
-            } else {
-                try {
-                    const response = await fetch(GITHUB_URL);
-                    const script = await response.text();
-                    localStorage.setItem(LIB_KEY, script);
-                    eval(script);
-                } catch (error) {
-                    new Noty({ text: "Erro ao carregar a biblioteca: " + error.message, type: "error", timeout: 3000 }).show();
-                }
-            }
-        }
+    // Parâmetros da escola
+    const ESCOLA_LAT = -8.513318;
+    const ESCOLA_LON = -39.309095;
+    const RAIO_ESCOLA_METROS = 50;
+    const ENDERECO_ESCOLA = "Escola Senador Paulo Guerra - Avenida Dona, Av. Brígida de Alençar, SN - Centro, Cabrobó - PE, 56180-000";
 
-        loadCustomAlert();
-    </script>
+    // Calcula a distância entre dois pontos (em metros)
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const rad = Math.PI / 180;
+      const dLat = (lat2 - lat1) * rad;
+      const dLon = (lon2 - lon1) * rad;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
-            authDomain: "escola-97256.firebaseapp.com",
-            databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",
-            projectId: "escola-97256",
-            storageBucket: "escola-97256.appspot.com",
-            messagingSenderId: "765009682973",
-            appId: "1:765009682973:web:d245f17dcdde0a28959cf4"
-        };
+    let identificador;
+    let nomeUsuario;
+    let fotoBase64 = "";
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    // Registra a presença do aluno
+    async function registrarPresenca() {
+      identificador = await prompt("Digite o identificador da chamada:");
+      if (!identificador) return;
 
-        const ESCOLA_LAT = -8.513318;
-        const ESCOLA_LON = -39.309095;
-        const RAIO_ESCOLA_METROS = 50;
-        const ENDERECO_ESCOLA = "Escola Senador Paulo Guerra - Avenida Dona, Av. Brígida de Alençar, SN - Centro, Cabrobó - PE, 56180-000";
+      // Verifica se a chamada existe e se ela solicita selfie
+      const chamadaSnapshot = await db.ref(`chamadas/${identificador}`).once("value");
+      const chamada = chamadaSnapshot.val();
+      if (!chamada) {
+        new Noty({ text: "Chamada não encontrada.", type: "error", timeout: 3000 }).show();
+        return;
+      }
 
-        function calcularDistancia(lat1, lon1, lat2, lon2) {
-            const R = 6371e3;
-            const rad = Math.PI / 180;
-            const dLat = (lat2 - lat1) * rad;
-            const dLon = (lon2 - lon1) * rad;
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
+      nomeUsuario = localStorage.getItem("nomeUsuario");
+      if (!nomeUsuario) {
+        nomeUsuario = await prompt("Digite seu nome:");
+        if (!nomeUsuario) return;
+        localStorage.setItem("nomeUsuario", nomeUsuario);
+      }
 
-        let identificador;
-        let nomeUsuario;
-        let fotoBase64 = "";
+      if (chamada.solicitarSelfie) {
+        // Se a chamada exige selfie, ativa a câmera e mostra o botão de captura
+        document.getElementById("video").style.display = "block";
+        document.getElementById("capturarFoto").style.display = "flex";
+        iniciarCamera();
+      } else {
+        // Caso contrário, pula a etapa da selfie e registra a presença com foto vazia
+        fotoBase64 = "";
+        obterLocalizacao();
+      }
+    }
 
-        async function registrarPresenca() {
-            identificador = await prompt("Digite o identificador da chamada:");
-            if (!identificador) return;
+    // Inicia a câmera
+    function iniciarCamera() {
+      const video = document.getElementById("video");
+      navigator.mediaDevices.getUserMedia({ video: true })
+          .then((stream) => {
+            video.srcObject = stream;
+            video.play();
+          })
+          .catch((error) => {
+            new Noty({ text: "Erro ao acessar a câmera: " + error.message, type: "error", timeout: 3000 }).show();
+          });
+    }
 
-            nomeUsuario = localStorage.getItem("nomeUsuario");
-            if (!nomeUsuario) {
-                nomeUsuario = await prompt("Digite seu nome:");
-                if (!nomeUsuario) return;
-                localStorage.setItem("nomeUsuario", nomeUsuario);
-            }
+    // Captura a foto e então obtém a localização
+    function capturarFoto() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      fotoBase64 = canvas.toDataURL("image/jpeg");
+      encerrarCamera();
+      obterLocalizacao();
+    }
 
-            document.getElementById("video").style.display = "block";
-            document.getElementById("capturarFoto").style.display = "flex";
+    // Encerra a câmera e esconde os elementos de vídeo e botão
+    function encerrarCamera() {
+      const video = document.getElementById("video");
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+      video.style.display = "none";
+      document.getElementById("capturarFoto").style.display = "none";
+    }
 
-            iniciarCamera();
-        }
+    // Obtém a localização e registra a presença no Firebase
+    function obterLocalizacao() {
+      const carregando = new Noty({ text: "Obtendo localização...", type: "info", timeout: false }).show();
+      navigator.geolocation.getCurrentPosition((position) => {
+        carregando.close();
+        const { latitude, longitude } = position.coords;
+        const localizacao = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        const distancia = calcularDistancia(latitude, longitude, ESCOLA_LAT, ESCOLA_LON);
+        const statusPresenca = distancia <= RAIO_ESCOLA_METROS ? "Na Escola" : "Fora da Escola";
 
-        function iniciarCamera() {
-            const video = document.getElementById("video");
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then((stream) => {
-                    video.srcObject = stream;
-                    video.play();
-                })
-                .catch((error) => {
-                    new Noty({ text: "Erro ao acessar a câmera: " + error.message, type: "error", timeout: 3000 }).show();
-                });
-        }
+        db.ref(`chamadas/${identificador}/alunos`).push({
+          nome: nomeUsuario,
+          localizacao: localizacao,
+          endereco: ENDERECO_ESCOLA,
+          status: statusPresenca,
+          foto: fotoBase64
+        });
 
-        function capturarFoto() {
-            const video = document.getElementById("video");
-            const canvas = document.getElementById("canvas");
-            const context = canvas.getContext("2d");
+        new Noty({ text: `${nomeUsuario}, sua presença foi registrada como "${statusPresenca}".`, type: "success", timeout: 4000 }).show();
+      }, (error) => {
+        carregando.close();
+        new Noty({ text: "Erro ao obter localização: " + error.message, type: "error", timeout: 3000 }).show();
+      });
+    }
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            fotoBase64 = canvas.toDataURL("image/jpeg");
-
-            encerrarCamera();
-            obterLocalizacao();
-        }
-
-        function encerrarCamera() {
-            const video = document.getElementById("video");
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-            }
-            video.style.display = "none";
-            document.getElementById("capturarFoto").style.display = "none";
-        }
-
-        function obterLocalizacao() {
-            const carregando = new Noty({ text: "Obtendo localização...", type: "info", timeout: false }).show();
-
-            navigator.geolocation.getCurrentPosition((position) => {
-                carregando.close();
-                const { latitude, longitude } = position.coords;
-                const localizacao = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                const distancia = calcularDistancia(latitude, longitude, ESCOLA_LAT, ESCOLA_LON);
-                const statusPresenca = distancia <= RAIO_ESCOLA_METROS ? "Na Escola" : "Fora da Escola";
-
-                db.ref(`chamadas/${identificador}/alunos`).push({
-                    nome: nomeUsuario,
-                    localizacao: localizacao,
-                    endereco: ENDERECO_ESCOLA,
-                    status: statusPresenca,
-                    foto: fotoBase64
-                });
-
-                new Noty({ text: `${nomeUsuario}, sua presença foi registrada como "${statusPresenca}".`, type: "success", timeout: 4000 }).show();
-            }, (error) => {
-                carregando.close();
-                new Noty({ text: "Erro ao obter localização: " + error.message, type: "error", timeout: 3000 }).show();
-            });
-        }
-
-        window.onload = registrarPresenca;
-    </script>
+    window.onload = registrarPresenca;
+  </script>
 </head>
 <body>
-    <video id="video"></video>
-    <button id="capturarFoto" onclick="capturarFoto()"><i class="fa fa-camera"></i></button>
-    <canvas id="canvas"></canvas>
+  <video id="video"></video>
+  <button id="capturarFoto" onclick="capturarFoto()"><i class="fa fa-camera"></i></button>
+  <canvas id="canvas"></canvas>
 </body>
 </html>
