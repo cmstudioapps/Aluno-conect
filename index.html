@@ -215,13 +215,16 @@ window.addEventListener('load', function() {
     const db = firebase.database();
 
     // Recupera ou solicita o nome do professor
-    let professor = localStorage.getItem("nomeProfessor");
+nm()
+ async function nm() {
+    let professor = await localStorage.getItem("nomeProfessor");
     if (!professor) {
-      professor = prompt("Digite seu nome:");
+      professor = await prompt("Digite seu nome:");
       if (professor) {
         localStorage.setItem("nomeProfessor", professor);
       }
     }
+}
     document.getElementById("nome-professor").innerText = "Professor: " + professor;
 
     // Recupera ou solicita o número do WhatsApp do professor
