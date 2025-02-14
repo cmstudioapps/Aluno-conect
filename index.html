@@ -1,422 +1,351 @@
+
+
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Conect Aluno - Registro de Chamada</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<html lang="pt-BR">  
+<head>  
+  <meta charset="UTF-8">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <title>Conect Aluno - Registro de Chamada</title>  
+  <link rel="stylesheet" href="style.css">  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">    <!-- Inclusão da biblioteca interceptarAlert.js -->    <style>  
+    /* Estilos do modal */  
+    .modal {  
+      display: none;  
+      position: fixed;  
+      z-index: 1000;  
+      left: 0;  
+      top: 0;  
+      width: 100%;  
+      height: 100%;  
+      background-color: rgba(0, 0, 0, 0.7);  
+      justify-content: center;  
+      align-items: center;  
+    }  
+    .modal-content {  
+      background-color: white;  
+      padding: 20px;  
+      border-radius: 10px;  
+      text-align: center;  
+      position: relative;  
+    }  
+    .modal img {  
+      max-width: 100%;  
+      height: auto;  
+      border-radius: 10px;  
+    }  
+    .modal .close-btn {  
+      position: absolute;  
+      top: 10px;  
+      right: 15px;  
+      font-size: 20px;  
+      cursor: pointer;  
+    }  
+    /* Estilos da lista de chamadas */  
+    #lista-chamadas {  
+      margin: 20px;  
+    }  
+    #lista-chamadas ul {  
+      list-style: none;  
+      padding: 0;  
+    }  
+    #lista-chamadas li {  
+      margin: 5px 0;  
+      display: flex;  
+      justify-content: space-between;  
+      align-items: center;  
+    }  
+    #lista-chamadas li a {  
+      text-decoration: none;  
+      color: #007bff;  
+      cursor: pointer;  
+    }  
+    /* Toggle button style */  
+    #toggle-selfie {  
+      margin: 10px;  
+      padding: 8px 12px;  
+      background-color: #007bff;  
+      color: white;  
+      border: none;  
+      border-radius: 5px;  
+      cursor: pointer;  
+    }  
+    #toggle-selfie.off {  
+      background-color: #dc3545;  
+    }  
+    /* Floating button style */  
+    .floating-btn {  
+      position: fixed;  
+      bottom: 20px;  
+      right: 20px;  
+      width: 60px;  
+      height: 60px;  
+      background-color: #28a745;  
+      color: white;  
+      border: none;  
+      border-radius: 50%;  
+      cursor: pointer;  
+      font-size: 24px;  
+      display: flex;  
+      align-items: center;  
+      justify-content: center;  
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);  
+      transition: background 0.3s ease-in-out;  
+    }  
+    .floating-btn:hover {  
+      background-color: #218838;  
+    }  
+    .delete-btn {  
+      background: none;  
+      border: none;  
+      color: #dc3545;  
+      cursor: pointer;  
+      font-size: 18px;  
+    }  
+    /* Botão para enviar via WhatsApp */  
+    #btn-enviar-whatsapp {  
+      display: none;  
+      margin: 20px;  
+      padding: 10px 15px;  
+      background-color: #25d366;  
+      color: white;  
+      border: none;  
+      border-radius: 5px;  
+      cursor: pointer;  
+      font-size: 16px;  
+    }  
+  </style>  </head>  
+<body>  
+  <header>  
+    <h1>Conect Aluno - Registro de Chamada</h1>  
+    <p id="nome-professor"></p>  
+    <button id="toggle-selfie">Solicitar Selfie: ON</button>  
+  </header>  
+  <main>  
+    <div id="lista-chamadas">  
+      <h2>Minhas Chamadas</h2>  
+      <ul id="lista-chamadas-ul">  
+        <li>Nenhuma chamada criada ainda.</li>  
+      </ul>  
+    </div>  
+    <div id="area-chamada">  
+      <p>Selecione uma chamada para visualizar os detalhes.</p>  
+    </div>  
+    <button id="btn-enviar-whatsapp">Enviar Lista para WhatsApp</button>  
+  </main>  
+  <button id="btn-criar-chamada" class="floating-btn">  
+    <i class="fas fa-plus"></i>  
+  </button>    <!-- Modal para visualizar a foto -->    <div id="modal" class="modal">  
+    <div class="modal-content">  
+      <span class="close-btn">&times;</span>  
+      <img id="modal-img" src="" alt="Foto do Aluno">  
+    </div>  
+  </div>    <!-- Firebase -->    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>    <script>  
+    // Configuração do Firebase  
+    const firebaseConfig = {  
+      apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",  
+      authDomain: "escola-97256.firebaseapp.com",  
+      databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",  
+      projectId: "escola-97256",  
+      storageBucket: "escola-97256.appspot.com",  
+      messagingSenderId: "765009682973",  
+      appId: "1:765009682973:web:d245f17dcdde0a28959cf4"  
+    };  
+    firebase.initializeApp(firebaseConfig);  
+    const db = firebase.database();  
   
-  <!-- Inclusão da biblioteca interceptarAlert.js -->
-<script type="module">
-
-            const GITHUB_URL = "https://raw.githubusercontent.com/cmstudioapps/Bibliotecas/main/interceptarAlert.js";
-
-            const LIB_KEY = "interceptarAlertLib";
-
-
-
-            async function loadCustomAlert() {
-
-                const storedLib = localStorage.getItem(LIB_KEY);
-
-
-
-                if (storedLib) {
-
-                    eval(storedLib);
-
-                } else {
-
-                    try {
-
-                        const response = await fetch(GITHUB_URL);
-
-                        const script = await response.text();
-
-                        localStorage.setItem(LIB_KEY, script);
-
-                        eval(script);
-
-                    } catch (error) {
-
-                        alert("Erro ao carregar a biblioteca: " + error.message);
-
-                    }
-
-                }
-
-            }
-
-            loadCustomAlert();
-
-            </script>
+    // Recupera ou solicita o nome do professor  
+    let professor = localStorage.getItem("nomeProfessor");  
+    if (!professor) {  
+      professor = prompt("Digite seu nome:");  
+      if (professor) {  
+        localStorage.setItem("nomeProfessor", professor);  
+      }  
+    }  
+    document.getElementById("nome-professor").innerText = "Professor: " + professor;  
   
-  <style>
-    /* Estilos do modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background-color: white;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      position: relative;
-    }
-    .modal img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 10px;
-    }
-    .modal .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 20px;
-      cursor: pointer;
-    }
-    /* Estilos da lista de chamadas */
-    #lista-chamadas {
-      margin: 20px;
-    }
-    #lista-chamadas ul {
-      list-style: none;
-      padding: 0;
-    }
-    #lista-chamadas li {
-      margin: 5px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    #lista-chamadas li a {
-      text-decoration: none;
-      color: #007bff;
-      cursor: pointer;
-    }
-    /* Toggle button style */
-    #toggle-selfie {
-      margin: 10px;
-      padding: 8px 12px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #toggle-selfie.off {
-      background-color: #dc3545;
-    }
-    /* Floating button style */
-    .floating-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-      transition: background 0.3s ease-in-out;
-    }
-    .floating-btn:hover {
-      background-color: #218838;
-    }
-    .delete-btn {
-      background: none;
-      border: none;
-      color: #dc3545;
-      cursor: pointer;
-      font-size: 18px;
-    }
-    /* Botão para enviar via WhatsApp */
-    #btn-enviar-whatsapp {
-      display: none;
-      margin: 20px;
-      padding: 10px 15px;
-      background-color: #25d366;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Conect Aluno - Registro de Chamada</h1>
-    <p id="nome-professor"></p>
-    <button id="toggle-selfie">Solicitar Selfie: ON</button>
-  </header>
-  <main>
-    <div id="lista-chamadas">
-      <h2>Minhas Chamadas</h2>
-      <ul id="lista-chamadas-ul">
-        <li>Nenhuma chamada criada ainda.</li>
-      </ul>
-    </div>
-    <div id="area-chamada">
-      <p>Selecione uma chamada para visualizar os detalhes.</p>
-    </div>
-    <button id="btn-enviar-whatsapp">Enviar Lista para WhatsApp</button>
-  </main>
-  <button id="btn-criar-chamada" class="floating-btn">
-    <i class="fas fa-plus"></i>
-  </button>
-
-  <!-- Modal para visualizar a foto -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn">&times;</span>
-      <img id="modal-img" src="" alt="Foto do Aluno">
-    </div>
-  </div>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script>
-
-window.addEventListener('load', function() {
-    // O código a ser executado quando todas as bibliotecas e recursos estiverem carregados
-    
-
-
-    // Configuração do Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyDWDe3o7EB5vUfAZ1dNzj7nLZ4Ieh0m6Lg",
-      authDomain: "escola-97256.firebaseapp.com",
-      databaseURL: "https://escola-97256-default-rtdb.firebaseio.com",
-      projectId: "escola-97256",
-      storageBucket: "escola-97256.appspot.com",
-      messagingSenderId: "765009682973",
-      appId: "1:765009682973:web:d245f17dcdde0a28959cf4"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // Recupera ou solicita o nome do professor
-nm()
- async function nm() {
-    let professor = await localStorage.getItem("nomeProfessor");
-    if (!professor) {
-      professor = await prompt("Digite seu nome:");
-      if (professor) {
-        localStorage.setItem("nomeProfessor", professor);
-      }
-    }
-}
-    document.getElementById("nome-professor").innerText = "Professor: " + professor;
-
-    // Recupera ou solicita o número do WhatsApp do professor
-    let professorWhatsApp = localStorage.getItem("whatsAppProfessor");
-    if (!professorWhatsApp) {
-      professorWhatsApp = prompt("Digite seu número do WhatsApp (apenas números com código do país, ex.: 5511999998888):");
-      if (professorWhatsApp) {
-        localStorage.setItem("whatsAppProfessor", professorWhatsApp);
-      }
-    }
-
-    // Variável para controle do toggle de selfie
-    let solicitarSelfieAtivo = true;
-    const toggleSelfieBtn = document.getElementById("toggle-selfie");
-    toggleSelfieBtn.addEventListener("click", function() {
-      solicitarSelfieAtivo = !solicitarSelfieAtivo;
-      toggleSelfieBtn.innerText = "Solicitar Selfie: " + (solicitarSelfieAtivo ? "ON" : "OFF");
-      if (solicitarSelfieAtivo) {
-        toggleSelfieBtn.classList.remove("off");
-      } else {
-        toggleSelfieBtn.classList.add("off");
-      }
-    });
-
-    // Função para gerar um identificador único verificando em todos os nós
-    function generateUniqueIdentifier() {
-      return new Promise((resolve, reject) => {
-        function attempt() {
-          const codigo = Math.floor(1000 + Math.random() * 9000);
-          const identificador = codigo.toString();
-          db.ref("chamadas/" + identificador).once("value")
-            .then(snapshot => {
-              if (snapshot.exists()) {
-                // Se já existe, tenta novamente
-                attempt();
-              } else {
-                resolve(identificador);
-              }
-            })
-            .catch(error => reject(error));
-        }
-        attempt();
-      });
-    }
-
-    // Carrega as chamadas do professor
-    function loadChamadas() {
-      const chamadasRef = db.ref("chamadas").orderByChild("professor").equalTo(professor);
-      chamadasRef.on("value", snapshot => {
-        const chamadas = snapshot.val();
-        const listaChamadasUl = document.getElementById("lista-chamadas-ul");
-        listaChamadasUl.innerHTML = "";
-        if (chamadas) {
-          for (const chamadaId in chamadas) {
-            const chamada = chamadas[chamadaId];
-            const li = document.createElement("li");
-            li.innerHTML = `
-              <span>
-                <a href="#" onclick="exibirChamada('${chamadaId}')">Chamada: ${chamadaId} - Selfie: ${chamada.solicitarSelfie ? 'Sim' : 'Não'}</a>
-              </span>
-              <button class="delete-btn" onclick="excluirChamada('${chamadaId}')"><i class="fas fa-trash-alt"></i></button>
-            `;
-            listaChamadasUl.appendChild(li);
-          }
-        } else {
-          listaChamadasUl.innerHTML = "<li>Nenhuma chamada criada ainda.</li>";
-        }
-      });
-    }
-    loadChamadas();
-
-    // Cria uma nova chamada com identificador único e armazena a data/hora
-    document.getElementById("btn-criar-chamada").addEventListener("click", function() {
-      generateUniqueIdentifier().then(identificador => {
-        const dataChamada = new Date().toLocaleString('pt-BR');
-        db.ref(`chamadas/${identificador}`).set({
-          professor: professor,
-          solicitarSelfie: solicitarSelfieAtivo,
-          alunos: {},
-          dataChamada: dataChamada
-        });
-        exibirChamada(identificador);
-      }).catch(error => {
-        alert("Erro ao gerar identificador único: " + error.message);
-      });
-    });
-
-    // Exibe a chamada selecionada, listando os alunos inscritos e mostrando o horário da chamada
-    function exibirChamada(identificador) {
-      const areaChamada = document.getElementById("area-chamada");
-      // Obtém os dados da chamada para recuperar a data/hora
-      db.ref(`chamadas/${identificador}`).once("value").then(snapshot => {
-        const callData = snapshot.val();
-        const dataChamada = callData.dataChamada || "Data não informada";
-        areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2>
-                                  <p>Realizada em: ${dataChamada}</p>
-                                  <ul id="lista-alunos"></ul>`;
-        const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);
-        chamadaRef.off();
-        chamadaRef.on("value", (snapshot) => {
-          const alunos = snapshot.val();
-          const listaAlunos = document.getElementById("lista-alunos");
-          listaAlunos.innerHTML = "";
-          let alunosTexto = `Lista de Alunos - ${identificador}\nRealizada em: ${dataChamada}\n\n`;
-          for (const alunoId in alunos) {
-            const { nome, localizacao, endereco, status, foto } = alunos[alunoId];
-            listaAlunos.innerHTML += `
-              <li>
-                <img src="${foto}" alt="Foto de ${nome}" width="50" height="50" style="border-radius: 50%;">
-                ${nome} - ${status} - 
-                <a href="${localizacao}" target="_blank">
-                  ${status === "Na Escola" ? endereco : "Localização do Aluno"}
-                </a>
-                <button onclick="verFoto('${foto}')">Ver Foto</button>
-              </li>`;
-            alunosTexto += `${nome} - ${status}\n`;
-            if (status === "Na Escola") {
-              alunosTexto += `${endereco}\n\n`;
-            } else {
-              alunosTexto += `Localização: ${localizacao}\n\n`;
-            }
-          }
-          const btnWhatsApp = document.getElementById("btn-enviar-whatsapp");
-          if (alunos) {
-            btnWhatsApp.style.display = "block";
-            btnWhatsApp.onclick = () => enviarWhatsApp(alunosTexto);
-          } else {
-            btnWhatsApp.style.display = "none";
-          }
-        });
-      });
-    }
-
-    // Exclui uma chamada após confirmação
-    async function excluirChamada(identificador) {
-  const resposta = await new Promise((resolve) => {
-    const confirmResult = confirm("Tem certeza que deseja excluir essa chamada?");
-    resolve(confirmResult);
-  });
-
-  if (resposta) {
-    db.ref(`chamadas/${identificador}`).remove()
-      .then(() => {
-        const areaChamada = document.getElementById("area-chamada");
-        if (areaChamada.innerHTML.includes(identificador)) {
-          areaChamada.innerHTML = "<p>Selecione uma chamada para visualizar os detalhes.</p>";
-        }
-        alert("Chamada excluída com sucesso.");
-      })
-      .catch(error => {
-        alert("Erro ao excluir chamada: " + error.message);
-      });
-  }
-}
-
-    // Envia o conteúdo da lista via WhatsApp para o número do professor, incluindo data/hora
-    function enviarWhatsApp(texto) {
-      let professorWhatsApp = localStorage.getItem("whatsAppProfessor");
-      if (!professorWhatsApp) {
-        professorWhatsApp = prompt("Digite seu número do WhatsApp (apenas números com código do país, ex.: 5511999998888):");
-        if (professorWhatsApp) {
-          localStorage.setItem("whatsAppProfessor", professorWhatsApp);
-        } else {
-          alert("Número do WhatsApp não informado.");
-          return;
-        }
-      }
-      const encodedText = encodeURIComponent(texto);
-      const url = "https://api.whatsapp.com/send?phone=" + professorWhatsApp + "&text=" + encodedText;
-      window.open(url, "_blank");
-    }
-
-    // Exibe o modal com a foto do aluno
-    function verFoto(foto) {
-      const modal = document.getElementById("modal");
-      const modalImg = document.getElementById("modal-img");
-      modalImg.src = foto;
-      modal.style.display = "flex";
-    }
-
-    document.querySelector(".close-btn").addEventListener("click", function() {
-      document.getElementById("modal").style.display = "none";
-    });
-
-    window.onclick = function(event) {
-      const modal = document.getElementById("modal");
-      if (event.target === modal) {
-        modal.style.display = "none";
-      }
-    };
-
-});
-  </script>
-</body>
+    // Recupera ou solicita o número do WhatsApp do professor  
+    let professorWhatsApp = localStorage.getItem("whatsAppProfessor");  
+    if (!professorWhatsApp) {  
+      professorWhatsApp = prompt("Digite seu número do WhatsApp (apenas números com código do país, ex.: 5511999998888):");  
+      if (professorWhatsApp) {  
+        localStorage.setItem("whatsAppProfessor", professorWhatsApp);  
+      }  
+    }  
+  
+    // Variável para controle do toggle de selfie  
+    let solicitarSelfieAtivo = true;  
+    const toggleSelfieBtn = document.getElementById("toggle-selfie");  
+    toggleSelfieBtn.addEventListener("click", function() {  
+      solicitarSelfieAtivo = !solicitarSelfieAtivo;  
+      toggleSelfieBtn.innerText = "Solicitar Selfie: " + (solicitarSelfieAtivo ? "ON" : "OFF");  
+      if (solicitarSelfieAtivo) {  
+        toggleSelfieBtn.classList.remove("off");  
+      } else {  
+        toggleSelfieBtn.classList.add("off");  
+      }  
+    });  
+  
+    // Função para gerar um identificador único verificando em todos os nós  
+    function generateUniqueIdentifier() {  
+      return new Promise((resolve, reject) => {  
+        function attempt() {  
+          const codigo = Math.floor(1000 + Math.random() * 9000);  
+          const identificador = codigo.toString();  
+          db.ref("chamadas/" + identificador).once("value")  
+            .then(snapshot => {  
+              if (snapshot.exists()) {  
+                // Se já existe, tenta novamente  
+                attempt();  
+              } else {  
+                resolve(identificador);  
+              }  
+            })  
+            .catch(error => reject(error));  
+        }  
+        attempt();  
+      });  
+    }  
+  
+    // Carrega as chamadas do professor  
+    function loadChamadas() {  
+      const chamadasRef = db.ref("chamadas").orderByChild("professor").equalTo(professor);  
+      chamadasRef.on("value", snapshot => {  
+        const chamadas = snapshot.val();  
+        const listaChamadasUl = document.getElementById("lista-chamadas-ul");  
+        listaChamadasUl.innerHTML = "";  
+        if (chamadas) {  
+          for (const chamadaId in chamadas) {  
+            const chamada = chamadas[chamadaId];  
+            const li = document.createElement("li");  
+            li.innerHTML = `  
+              <span>  
+                <a href="#" onclick="exibirChamada('${chamadaId}')">Chamada: ${chamadaId} - Selfie: ${chamada.solicitarSelfie ? 'Sim' : 'Não'}</a>  
+              </span>  
+              <button class="delete-btn" onclick="excluirChamada('${chamadaId}')"><i class="fas fa-trash-alt"></i></button>  
+            `;  
+            listaChamadasUl.appendChild(li);  
+          }  
+        } else {  
+          listaChamadasUl.innerHTML = "<li>Nenhuma chamada criada ainda.</li>";  
+        }  
+      });  
+    }  
+    loadChamadas();  
+  
+    // Cria uma nova chamada com identificador único e armazena a data/hora  
+    document.getElementById("btn-criar-chamada").addEventListener("click", function() {  
+      generateUniqueIdentifier().then(identificador => {  
+        const dataChamada = new Date().toLocaleString('pt-BR');  
+        db.ref(`chamadas/${identificador}`).set({  
+          professor: professor,  
+          solicitarSelfie: solicitarSelfieAtivo,  
+          alunos: {},  
+          dataChamada: dataChamada  
+        });  
+        exibirChamada(identificador);  
+      }).catch(error => {  
+        alert("Erro ao gerar identificador único: " + error.message);  
+      });  
+    });  
+  
+    // Exibe a chamada selecionada, listando os alunos inscritos e mostrando o horário da chamada  
+    function exibirChamada(identificador) {  
+      const areaChamada = document.getElementById("area-chamada");  
+      // Obtém os dados da chamada para recuperar a data/hora  
+      db.ref(`chamadas/${identificador}`).once("value").then(snapshot => {  
+        const callData = snapshot.val();  
+        const dataChamada = callData.dataChamada || "Data não informada";  
+        areaChamada.innerHTML = `<h2>Chamada Ativa: ${identificador}</h2>  
+                                  <p>Realizada em: ${dataChamada}</p>  
+                                  <ul id="lista-alunos"></ul>`;  
+        const chamadaRef = db.ref(`chamadas/${identificador}/alunos`);  
+        chamadaRef.off();  
+        chamadaRef.on("value", (snapshot) => {  
+          const alunos = snapshot.val();  
+          const listaAlunos = document.getElementById("lista-alunos");  
+          listaAlunos.innerHTML = "";  
+          let alunosTexto = `Lista de Alunos - ${identificador}\nRealizada em: ${dataChamada}\n\n`;  
+          for (const alunoId in alunos) {  
+            const { nome, localizacao, endereco, status, foto } = alunos[alunoId];  
+            listaAlunos.innerHTML += `  
+              <li>  
+                <img src="${foto}" alt="Foto de ${nome}" width="50" height="50" style="border-radius: 50%;">  
+                ${nome} - ${status} -   
+                <a href="${localizacao}" target="_blank">  
+                  ${status === "Na Escola" ? endereco : "Localização do Aluno"}  
+                </a>  
+                <button onclick="verFoto('${foto}')">Ver Foto</button>  
+              </li>`;  
+            alunosTexto += `${nome} - ${status}\n`;  
+            if (status === "Na Escola") {  
+              alunosTexto += `${endereco}\n\n`;  
+            } else {  
+              alunosTexto += `Localização: ${localizacao}\n\n`;  
+            }  
+          }  
+          const btnWhatsApp = document.getElementById("btn-enviar-whatsapp");  
+          if (alunos) {  
+            btnWhatsApp.style.display = "block";  
+            btnWhatsApp.onclick = () => enviarWhatsApp(alunosTexto);  
+          } else {  
+            btnWhatsApp.style.display = "none";  
+          }  
+        });  
+      });  
+    }  
+  
+    // Exclui uma chamada após confirmação  
+    function excluirChamada(identificador) {  
+      if (confirm("Tem certeza que deseja excluir essa chamada?")) {  
+        db.ref(`chamadas/${identificador}`).remove()  
+          .then(() => {  
+            const areaChamada = document.getElementById("area-chamada");  
+            if (areaChamada.innerHTML.includes(identificador)) {  
+              areaChamada.innerHTML = "<p>Selecione uma chamada para visualizar os detalhes.</p>";  
+            }  
+            alert("Chamada excluída com sucesso.");  
+          })  
+          .catch(error => {  
+            alert("Erro ao excluir chamada: " + error.message);  
+          });  
+      }  
+    }  
+  
+    // Envia o conteúdo da lista via WhatsApp para o número do professor, incluindo data/hora  
+    function enviarWhatsApp(texto) {  
+      let professorWhatsApp = localStorage.getItem("whatsAppProfessor");  
+      if (!professorWhatsApp) {  
+        professorWhatsApp = prompt("Digite seu número do WhatsApp (apenas números com código do país, ex.: 5511999998888):");  
+        if (professorWhatsApp) {  
+          localStorage.setItem("whatsAppProfessor", professorWhatsApp);  
+        } else {  
+          alert("Número do WhatsApp não informado.");  
+          return;  
+        }  
+      }  
+      const encodedText = encodeURIComponent(texto);  
+      const url = "https://api.whatsapp.com/send?phone=" + professorWhatsApp + "&text=" + encodedText;  
+      window.open(url, "_blank");  
+    }  
+  
+    // Exibe o modal com a foto do aluno  
+    function verFoto(foto) {  
+      const modal = document.getElementById("modal");  
+      const modalImg = document.getElementById("modal-img");  
+      modalImg.src = foto;  
+      modal.style.display = "flex";  
+    }  
+  
+    document.querySelector(".close-btn").addEventListener("click", function() {  
+      document.getElementById("modal").style.display = "none";  
+    });  
+  
+    window.onclick = function(event) {  
+      const modal = document.getElementById("modal");  
+      if (event.target === modal) {  
+        modal.style.display = "none";  
+      }  
+    };  
+  </script>  </body>  
 </html>
