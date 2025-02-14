@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Removido jsPDF, pois não será mais utilizado -->
   <style>
     /* Estilos do modal */
     .modal {
@@ -102,6 +102,18 @@
       cursor: pointer;
       font-size: 18px;
     }
+    /* Botão para enviar via WhatsApp */
+    #btn-enviar-whatsapp {
+      display: none;
+      margin: 20px;
+      padding: 10px 15px;
+      background-color: #25d366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -120,7 +132,7 @@
     <div id="area-chamada">
       <p>Selecione uma chamada para visualizar os detalhes.</p>
     </div>
-    <button id="btn-baixar-pdf" style="display: none;">Baixar Lista em PDF</button>
+    <button id="btn-enviar-whatsapp">Enviar Lista para WhatsApp</button>
   </main>
   <button id="btn-criar-chamada" class="floating-btn">
     <i class="fas fa-plus"></i>
@@ -160,6 +172,15 @@
       }
     }
     document.getElementById("nome-professor").innerText = "Professor: " + professor;
+
+    // Recupera ou solicita o número do WhatsApp do professor
+    let professorWhatsApp = localStorage.getItem("whatsAppProfessor");
+    if (!professorWhatsApp) {
+      professorWhatsApp = prompt("Digite seu número do WhatsApp (apenas números com código do país, ex.: 5511999998888):");
+      if (professorWhatsApp) {
+        localStorage.setItem("whatsAppProfessor", professorWhatsApp);
+      }
+    }
 
     // Variável para controle do toggle de selfie
     let solicitarSelfieAtivo = true;
@@ -241,12 +262,12 @@
             alunosTexto += `Localização: ${localizacao}\n\n`;
           }
         }
-        const btnPdf = document.getElementById("btn-baixar-pdf");
+        const btnWhatsApp = document.getElementById("btn-enviar-whatsapp");
         if (alunos) {
-          btnPdf.style.display = "block";
-          btnPdf.onclick = () => baixarPDF(alunosTexto);
+          btnWhatsApp.style.display = "block";
+          btnWhatsApp.onclick = () => enviarWhatsApp(alunosTexto);
         } else {
-          btnPdf.style.display = "none";
+          btnWhatsApp.style.display = "none";
         }
       });
     }
@@ -268,14 +289,22 @@
       }
     }
 
-    // Gera o PDF com a lista de alunos
-    function baixarPDF(texto) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFont("times", "normal");
-      doc.setFontSize(12);
-      doc.text(texto, 10, 10, { maxWidth: 180 });
-      doc.save("lista_chamada.pdf");
+    // Envia o conteúdo da lista via WhatsApp para o número do professor
+    function enviarWhatsApp(texto) {
+      // Certifica-se de que o número do WhatsApp esteja definido
+      let professorWhatsApp = localStorage.getItem("whatsAppProfessor");
+      if (!professorWhatsApp) {
+        professorWhatsApp = prompt("Digite seu número do WhatsApp (apenas números com código do país, ex.: 5511999998888):");
+        if (professorWhatsApp) {
+          localStorage.setItem("whatsAppProfessor", professorWhatsApp);
+        } else {
+          alert("Número do WhatsApp não informado.");
+          return;
+        }
+      }
+      const encodedText = encodeURIComponent(texto);
+      const url = "https://api.whatsapp.com/send?phone=" + professorWhatsApp + "&text=" + encodedText;
+      window.open(url, "_blank");
     }
 
     // Exibe o modal com a foto do aluno
